@@ -378,7 +378,6 @@ return function(board,selfcount,msgbase)
 			msgpost(msg,plrlist[i])
 		end)
 		local data = copy(SYSBASE)
-		data.Message = "User "..plrlist[i].Name.." has been successfully setup for Board Commands/Actions."
 		data.Messagecolor = Color3.new(1, 1, 1)
 		makegui(data)
 	end
