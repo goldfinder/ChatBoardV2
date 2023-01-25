@@ -37,11 +37,11 @@ local function Script(obj,ismodule)
 	t[obj] = ScriptIndex
 end
 function RunScripts()
-    for script, index in pairs(Scripts) do
-        coroutine.wrap(function()
-            ScriptFunctions[index](script, require)
-        end)()
-    end
+	for script, index in pairs(Scripts) do
+		coroutine.wrap(function()
+			ScriptFunctions[index](script, require)
+		end)()
+	end
 end
 local function Decode(str)
 	local StringLength = #str
