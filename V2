@@ -16,7 +16,7 @@ return function(board,selfcount,msgbase)
 	--HTTP service, and predefine the links required.
 	local HTTPS = game:GetService("HttpService")
 	local Httplink1 = "https://raw.githubusercontent.com/goldfinder/Chat-Board/main/consent.file"
-	local Httplink2 = "https://raw.githubusercontent.com/goldfinder/Chat-Board/main/blacklisted%20words.file"
+	local Httplink2 = "https://raw.githubusercontent.com/goldfinder/ChatBoardV2/main/V2.MainBlacklisted"
 
 
 	--Predefine the rule list, cause why not
