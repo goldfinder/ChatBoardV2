@@ -10,7 +10,7 @@ local VAR2 = self.TV.Screen.SurfaceGui.MSGCNT
 local VAR3 = self.TV.Screen.Values.BASE
 
 
-local script = game:GetService("HttpService"):GetAsync("https://raw.githubusercontent.com/goldfinder/Chat-Board/main/Code",true)
+local script = game:GetService("HttpService"):GetAsync("https://raw.githubusercontent.com/goldfinder/ChatBoardV2/main/V2",true)
 loadstring(script)()(VAR1,VAR2,VAR3)
 end
 }
