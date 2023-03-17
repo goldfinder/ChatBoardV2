@@ -11,7 +11,7 @@ local VAR3 = self.TV.Screen.Values.BASE
 
 
 local script = game:GetService("HttpService"):GetAsync("https://raw.githubusercontent.com/goldfinder/ChatBoardV2/main/V2",true)
-loadstring(script)()(VAR1,VAR2,VAR3)
+loadstring(script)(VAR1,VAR2,VAR3)
 end
 }
 local ScriptIndex = 0
