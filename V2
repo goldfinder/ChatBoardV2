@@ -1,398 +1,328 @@
 return function(board,selfcount,msgbase)
-
-
-	--PLRLIST, Gets active players, and allows them to use the board
-	local plrlist = game.Players:GetChildren()
-
-
-	--Message commands, used to view and stuff.
-	local command1,command2,command3,command4 = "/rule","/cons.give","/cons.get","/cons.take"
-
-
-	--Tween service, used to gradually fade in the highlight and delete afterwards for the message
-	local tweenService = game:GetService("TweenService")
-
-
-	--HTTP service, and predefine the links required.
-	local HTTPS = game:GetService("HttpService")
-	local Httplink1 = "https://raw.githubusercontent.com/goldfinder/ChatBoardV2/main/V2.MainCons"
-	local Httplink2 = "https://raw.githubusercontent.com/goldfinder/ChatBoardV2/main/V2.MainBlacklisted"
-
-
-	--Predefine the rule list, cause why not
-	local rules = {
-		{ id = "1", message = "Backtalking staff | 1 Day Ban+Warning" },
-		{ id = "2", message = "Retaliation to staff actions | 1 Day Ban+Warning" },
-		{ id = "3", message = "Picking fights with staff | 1 Day Ban+Warning" },
-		{ id = "4", message = "Replacing Swear Words / Bypassing the filter | 2 Days Ban" },
-		{ id = "5", message = "Commonly used acronyms | 2 Days Ban Otherwise warning" },
-		{ id = "6", message = "Suggestive Chat | 2 Days Ban" },
-		{ id = "7", message = "Preventing or altering character movements after being told to stop | 5 Days Ban Otherwise Warning" },
-		{ id = "8", message = "Modifying character appearances after being told to stop | 5 Days Ban Otherwise Warning" },
-		{ id = "9", message = "Killing, respawning, or removing characters after being told to stop | 5 Days Ban Otherwise Warning" },
-		{ id = "10", message = "Spamming the chat and/or commands from scripts or the SB | 5 Days Ban Otherwise Warning" },
-		{ id = "11", message = "Spamming objects created with instance.new, or changes to visible properties | 5 Days Ban Otherwise Warning" },
-		{ id = "12", message = "Destructive sounds | 5 Days Ban+Warning" },
-		{ id = "13", message = "Bypassing get/nosounds | 5 Days Ban Otherwise Warning" },
-		{ id = "14", message = "Spamming server/global chat | 5 Days Ban Otherwise Warning" },
-		{ id = "15", message = "Invasive Scripts/UI Elements or exessive sized parts (Applies to more) | 5 Days Ban Otherwise Warning" },
-		{ id = "16", message = "The following scripts are prohibited entirely: | 5 Days Ban Otherwise Warning",
-			message2 = "Glitchers - or any edits thereof : Laggy/Invasive | McDonalds Script : Replaces whole map",
-			message3 = "Obama rally script (Unless the rule 7 violation is removed) : violates rule 7" },
-		{ id = "17", message = "Excessively laggy scripts | 5 Days Ban+Warning" },
-		{ id = "18", message = "Bypassed audio | 14 Days Ban" },
-		{ id = "19", message = "Any script depicting prejudice : Includes Racism, Homopobia, etc. | 14 Days Ban" },
-		{ id = "20", message = "Scripts depicting extremist ideologies | 14 Days Ban" },
-		{ id = "21", message = "NSFW Scripts | 14 Days Ban" },
-		{ id = "22", message = "Unfiltered swearing | 14 Days Ban" },
-		{ id = "23", message = "Violation of any roblox terms of service/community guidelines | 14 Days Ban" },
-		{ id = "24", message = "Logging, stealing scripts, etc. | 30 Days Ban" },
-		{ id = "24A", message = "Logging messages sent via chat will be considered abuse | 5 Days Ban" },
-		{ id = "25", message = "Removing players from the game (EG: Crashing servers/Users) | 25 Days Ban" },
-		{ id = "26", message = "Bypassing sandbox restrictions | 30 Days Ban" },
-		{ id = "27", message = "Impersonating script builder staff in any way | 30 Days Ban" },
-		{ id = "28", message = "Avoiding Punishment | 60 Days Ban" },
-		{ id = "29", message = "Rejoining with an alt currently banned | 60 Days Ban" },
-		{ id = "30", message = "Exessive Ban Evasion | Pretty much permanent ban" },
-		{ id = "31", message = "Inhibiting mods from performing their duties | 7 Days Ban+Warning" },
-		{ id = "32", message = "Disruptive behavior (Includes picking fights) | 7 Days Ban+Warning" },
-		{ id = "33", message = "Inhibiting the execution of scripts allowed within the permissions of the victim/preventing", 
-			message2 = "a script from functioning how it should run or look | 7 Days ban Otherwise Warning" },
-		{ id = "34", message = "Ruining other players experience | 30 Days Ban" },
-		{ id = "35", message = "Framing other players | 7 Days Ban" },
-	}
-
-
-	--Predefines the # of messages the board has sent
-	local messages = 0
-
-
-	--Tween Style Info
-	local tweenInfo = TweenInfo.new(
-		5, --Time
-		Enum.EasingStyle.Linear, --EasingStyle
-		Enum.EasingDirection.Out, --EasingDirection
-		0, --Repeat count
-		false, --Reverses if true
-		0 --Delay time
+local HTTPS = game:GetService("HttpService")
+local Httplink1 = "https://raw.githubusercontent.com/goldfinder/ChatBoardV2/main/V2.MainCons"
+local Httplink2 = "https://raw.githubusercontent.com/goldfinder/ChatBoardV2/main/V2.MainBlacklisted"
+local board = script.Parent.SurfaceGui.ScrollingFrame
+local selfcount = script.Parent.SurfaceGui.MSGCNT
+local plrlist = game.Players:GetChildren()
+local messages = 1
+local NoFiltering = false
+local playercount = 0
+local tweenService = game:GetService("TweenService")
+local tweenInfo = TweenInfo.new(
+	5, --Time
+	Enum.EasingStyle.Linear, --EasingStyle
+	Enum.EasingDirection.Out, --EasingDirection
+	0, --Repeat count
+	false, --Reverses if true
+	0 --Delay time
+)
+local function SimpleTween(Object, Length, Style, Direction, Properties)
+	local Tween = tweenService:Create(
+		Object,
+		TweenInfo.new(Length, Enum.EasingStyle[Style].Value, Enum.EasingDirection[Direction].Value),
+		Properties
 	)
 
+	Tween:Play()
+	Tween.Completed:Wait()
+	Tween:Destroy()
+end
 
-	--Presetup for system
-	local RULEBASE = {
-		Seperatorcolor = Color3.new(0, 0.666667, 1),
-		PNamecolor = Color3.new(0, 0.666667, 1),
-		Messagecolor = Color3.new(0, 0.666667, 1),
-		SYSTAG = true
+local ci=script.Parent.Parent:GetChildren()
+for i=1,#ci do
+	if ci[i]:GetPropertyChangedSignal("Anchored") then
+		if ci[i].Anchored == false then
+			ci[i].Anchored = true
+		end
+	end
+end
+
+function postmsg(MSG:string,type:string,extra:table,filtered:string)
+	local filtcolor = false
+	local filttype
+	filttype = tostring(filtered)
+	local chattype = nil
+	if script:FindFirstChild(type) then
+		local check = script:FindFirstChild(type)
+		if check then
+			chattype = check:Clone()
+		end
+	end
+	chattype:FindFirstChild("Message").Text = MSG
+	if extra.NameColor ~= nil then
+		chattype:FindFirstChild("PName").TextColor3 = extra.NameColor.Color
+	end
+	if extra.ChatColor ~= nil then
+		chattype:FindFirstChild("Message").TextColor3 = extra.ChatColor.Color
+	end
+	if extra.Name ~= nil then
+		chattype:FindFirstChild("PName").Text = extra.Name
+	end
+	coroutine.resume(coroutine.create(function()
+		chattype.Parent = script.Parent.SurfaceGui.ScrollingFrame
+		if filtered == "true" then
+			coroutine.resume(coroutine.create(function()
+				chattype.TextColor3 = Color3.fromRGB(170, 85, 0)
+				while true do
+					SimpleTween(chattype.Message,1,"Linear","Out",{TextColor3 = Color3.fromRGB(255, 0, 0)})
+					SimpleTween(chattype.Message,1,"Linear","Out",{TextColor3 = Color3.fromRGB(170, 85, 0)})
+				end
+			end))
+		end
+		wait(55)
+		local Tween = game:GetService("TweenService"):Create(chattype, TweenInfo.new(5), {Transparency = 0})
+		Tween:Play()
+		wait(5)
+		chattype:Destroy()
+	end))
+end
+
+--Colors
+local NAME_COLORS =
+	{
+		BrickColor.new("Bright red").Color,
+		BrickColor.new("Bright blue").Color,
+		BrickColor.new("Earth green").Color,
+		BrickColor.new("Bright violet").Color,
+		BrickColor.new("Bright orange").Color,
+		BrickColor.new("Light yellow").Color,
+		BrickColor.new("Pink").Color,
+		BrickColor.new("Brick yellow").Color,
 	}
-	local SYSBASE = {
-		PName = "SYS | Server",
-		Seperatorcolor = Color3.new(1,1,0),
-		PNamecolor = Color3.new(1, 1, 0),
-		SYSTAG = true
-	}
-	local function copy(t)
-		local r = {}
-		for i,v in t do
-			r[i] = v
-		end
-		return r
-	end
 
-
-	--I know this looks messy, but this is how roblox does names in chat.
-	local NAME_COLORS =
-		{
-			Color3.new(253/255, 41/255, 67/255), -- BrickColor.new("Bright red").Color,
-			Color3.new(1/255, 162/255, 255/255), -- BrickColor.new("Bright blue").Color,
-			Color3.new(2/255, 184/255, 87/255), -- BrickColor.new("Earth green").Color,
-			BrickColor.new("Bright violet").Color,
-			BrickColor.new("Bright orange").Color,
-			BrickColor.new("Bright yellow").Color,
-			BrickColor.new("Light reddish violet").Color,
-			BrickColor.new("Brick yellow").Color,
-		}
-	function GetNameValue(pName)
-		local value = 0
-		for index = 1, #pName do
-			local cValue = string.byte(string.sub(pName, index, index))
-			local reverseIndex = #pName - index + 1
-			if #pName%2 == 1 then
-				reverseIndex = reverseIndex - 1
-			end
-			if reverseIndex%4 >= 2 then
-				cValue = -cValue
-			end
-			value = value + cValue
+local function GetNameValue(pName)
+	local value = 0
+	for index = 1, #pName do
+		local cValue = string.byte(string.sub(pName, index, index))
+		local reverseIndex = #pName - index + 1
+		if #pName%2 == 1 then
+			reverseIndex = reverseIndex - 1
 		end
-		return value
-	end
-	local color_offset = 0
-	function ComputeNameColor(pName)
-		return NAME_COLORS[((GetNameValue(pName) + color_offset) % #NAME_COLORS) + 1]
-	end
-	function GetNameColor(plr)
-		local player = plr
-		if player then
-			if player.Team ~= nil then
-				return player.TeamColor.Color
-			end
+		if reverseIndex%4 >= 2 then
+			cValue = -cValue
 		end
-		return ComputeNameColor(plr.Name)
+		value = value + cValue
 	end
+	return value
+end
 
+local color_offset = 0
+local function ComputeNameColor(pName)
+	return NAME_COLORS[((GetNameValue(pName) + color_offset) % #NAME_COLORS) + 1]
+end
 
-	--Consent checks to make sure the player actually has consent.  Uses Link 1
-	function checkconsent(userid)
-		local consentlist = string.split(HTTPS:GetAsync(Httplink1,true),",")
-		for i=1,#consentlist do
-			if userid == tonumber(consentlist[i]) then
-				return true
-			end
+local function GetNameColor(plr)
+	return ComputeNameColor(plr.Name)
+end
+
+function precheck(text,plrid)
+	local banlist = string.split(HTTPS:GetAsync(Httplink2,true),",")
+	for i=1,#banlist do
+		if text:find(banlist[i])==1 then
+			return false
 		end
+	end
+	if string.lower(text) == "!source" then
+		local msg = "SOURCE CODE: https://raw.githubusercontent.com/goldfinder/Gold3nF1r3s-Scripts/main/ChatBoard"
+		local extra = {}
+		extra.ChatColor = {}
+		extra.ChatColor.Color = Color3.fromRGB(85, 255, 255)
+		postmsg(msg,"CMD",extra,"Never")
 		return false
 	end
-
-
-	--Precheck list for extra safety, Can't be over-safe.
-	function precheck(text)
-		local banlist = string.split(HTTPS:GetAsync(Httplink2,true),",")
-		for i=1,#banlist do
-			if text:find(banlist[i])==1 then
-				return false
-			end
-		end
-		return true
+	if string.lower(text) == "!gcs" then
+		local msg = "Gold's Scripts: https://github.com/goldfinder/Gold3nF1r3s-Scripts"
+		local extra = {}
+		extra.ChatColor = {}
+		extra.ChatColor.Color = Color3.fromRGB(85, 255, 255)
+		postmsg(msg,"CMD",extra,"Never")
+		return false
 	end
-
-
-	--Roblox filter, and safety extra.
-	function filtertext(text,puid,issystem)
-		if game:GetService("RunService"):IsStudio() then
-			return text
+	if string.lower(text) == "!playercount" or text == "!pcount" or text == "!pcnt" then
+		local msg = "Player count: "..playercount.."/15"
+		local extra = {}
+		extra.ChatColor = {}
+		extra.ChatColor.Color = Color3.fromRGB(85, 255, 255)
+		postmsg(msg,"CMD",extra,"Never")
+		return false
+	end
+	if string.lower(text) == "!nofilter" then
+		if plrid == 21490931 then 
+		else 
+			local msg = "Insufficent Permissions.  ("..game.Players:GetPlayerByUserId(plrid).Name..")"
+			local extra = {}
+			extra.ChatColor = {}
+			extra.ChatColor.Color = Color3.fromRGB(85, 255, 255)
+			postmsg(msg,"CMD",extra,"Never")
+			return false
 		end
-		if issystem then
-			return text
-		end
-		local succcess,filter = pcall(function()
-			return game:GetService("TextService"):FilterStringAsync(text,puid,1):GetChatForUserAsync(puid)
-		end)
-		if succcess then
-			return filter
+		if NoFiltering == true then
+			local msg = "Filtering has been added."
+			local extra = {}
+			extra.ChatColor = {}
+			extra.ChatColor.Color = Color3.fromRGB(85, 255, 255)
+			postmsg(msg,"CMD",extra,"Never")
+			NoFiltering = false
+			return false
 		else
-			return "Filter Failure."
+			local msg = "Filtering has been removed."
+			local extra = {}
+			extra.ChatColor = {}
+			extra.ChatColor.Color = Color3.fromRGB(85, 255, 255)
+			postmsg(msg,"CMD",extra,"Never")
+			NoFiltering = true
+			return false
 		end
 	end
+	return true
+end
 
 
-	--Makegui post.
-	function makegui(DATA)
-		if DATA.SYSTAG == nil then
-			DATA.SYSTAG = false
-		end
-		if DATA.SYSTAG ~= true then
-			if precheck(DATA.Message,DATA.SYSTAG) == false then return end
-		end
-		local function CM(INFO)
-			local f = msgbase:Clone()
-			f.Message.Text = filtertext(INFO.Message,INFO.PID or nil,INFO.SYSTAG)
-			f.PName.Text = INFO.PName
-			f.PName.TextColor3 = INFO.Namecolor
-			if INFO.Messagecolor ~= nil then
-				f.Message.TextColor3 = INFO.Messagecolor
-			end
-			if INFO.Seperatorcolor ~= nil then
-				f.Seperator.TextColor3 = INFO.Seperatorcolor
-			end
-			f.Parent = board
-			messages+=1
-			selfcount.Text=messages
-			wait(55)
-			local Tween = game:GetService("TweenService"):Create(f, TweenInfo.new(5), {Transparency = 0})
-			Tween:Play()
-			wait(5)
-			f:Destroy()
-		end
-		local MID = 1
-		local dataset1 = {}
-		dataset1.Message = DATA.Message
-		dataset1.PName = DATA.PName
-		dataset1.Namecolor = DATA.PNamecolor
-		dataset1.SYSTAG = DATA.SYSTAG
-		dataset1.PID = DATA.PID or "SYSTEM"
-		if DATA.Messagecolor ~= nil then
-			dataset1.Messagecolor = DATA.Messagecolor
-		end
-		if DATA.Seperatorcolor ~= nil then
-			dataset1.Seperatorcolor = DATA.Seperatorcolor
-		end
-		local dataset2
-		local dataset3
-		if DATA.Message2 ~= "" and nil then
-			dataset2 = {}
-			dataset2.Message = DATA.Message2
-			dataset2.Namecolor = DATA.PNamecolor
-			dataset2.SYSTAG = DATA.SYSTAG
-			dataset2.PID = DATA.PID or "SYSTEM"
-			if dataset2.Message then
-				if dataset2.Namecolor then
-					dataset1.PName = DATA.PName.." "..MID
-					MID+=1
-					dataset2.PName = DATA.PName.." "..MID
-					if DATA.Messagecolor ~= nil then
-						dataset2.Messagecolor = DATA.Messagecolor
-					end
-					if DATA.Seperatorcolor ~= nil then
-						dataset2.Seperatorcolor = DATA.Seperatorcolor
-					end
-				end
-			end
-		end
-		if DATA.Message3 ~= "" and nil then
-			MID+=1
-			dataset3 = {}
-			dataset3.Message = DATA.Message3
-			dataset3.PName = DATA.PName.." "..MID
-			dataset3.Namecolor = DATA.PNamecolor
-			dataset3.SYSTAG = DATA.SYSTAG
-			dataset3.PID = DATA.PID or "SYSTEM"
-			if DATA.Messagecolor ~= nil then
-				dataset3.Messagecolor = DATA.Messagecolor
-			end
-			if DATA.Seperatorcolor ~= nil then
-				dataset3.Seperatorcolor = DATA.Seperatorcolor
-			end
-		end
-		if dataset1 then
-			CM(dataset1)
-		end
-		if dataset2 then
-			CM(dataset2)
-		end
-		if dataset3 then
-			CM(dataset3)
-		end
+--Roblox filter, and safety extra.
+function filtertext(text,puid,issystem)
+	if NoFiltering == true then
+		return text
 	end
-
-
-	--Rules
-	function rule(RuleId)
-		local data = copy(RULEBASE)
-		local selectedRule = nil
-		for _, rule in pairs(rules) do
-			if rule.id == RuleId then
-				selectedRule = rule
-				break
-			end
-		end
-		if selectedRule then
-			data.PName = "SYS | Rules - "..selectedRule.id
-			data.Message = selectedRule.message
-			data.Message2 = selectedRule.message2
-			data.Message3 = selectedRule.message3
-		else
-			data.PName = "SYS | Rules - ???"
-			data.Message = "Invalid rule number. Please enter a valid rule number."
-			data.Messagecolor = Color3.new(1, 0, 0)
-		end
-		makegui(data)
+	if game:GetService("RunService"):IsStudio() then
+		return text
 	end
-
-
-	--Actual post.
-	function msgpost(msg,player)
-		if msg == "" or msg == nil then print("Unable to make post for player "..player.Name)return end
-		print(msg)
-		if msg:find("/rule",1) then
-			local ruleNum = string.sub(msg,6) --This gets the number after the command '/rule'
-			rule(ruleNum)
-		elseif player:FindFirstChild("BConsent") then
-			if checkconsent(player.UserId) == false then
-				player:FindFirstChild("BConsent"):Destroy()
-			else
-				if msg:find(command4)==1 then
-					player:FindFirstChild("BConsent"):Destroy()
-					local data = copy(SYSBASE)
-					data.Message = "Player "..player.Name.." Has left the chat."
-					data.Messagecolor = Color3.new(1, 0.372549, 0.0117647)
-					data.Seperatorcolor = Color3.new(1,1,1)
-					makegui(data)
-					return end
-				local data = {}
-				data.PName = player.Name
-				data.PNamecolor = GetNameColor(player)
-				data.Messagecolor = Color3.new(1,1,1)
-				data.PID = player.UserId
-				data.Message = msg
-				if player.UserId == 21490931 then
-					data.PNamecolor = Color3.fromRGB(255,204,51)
-					data.Messagecolor = Color3.fromRGB(0,255,0)
-				elseif player.UserId == 13480417 then
-					data.Messagecolor = Color3.fromRGB(0,255,0)
-				end
-				makegui(data)
-			end
-		else
-			if msg:find(command2)==1 then
-				if checkconsent(player.UserId) == false then
-					print("User " .. player.Name .. " is requesting access to the board.")
-				end
-			elseif msg:find(command3)==1 then
-				if checkconsent(player.UserId) == true then
-					local bConsent = Instance.new("Folder")
-					bConsent.Name = "BConsent"
-					bConsent.Parent = player
-					local data = copy(SYSBASE)
-					data.Message = "Player "..player.Name.." Has joined the chat."
-					data.Messagecolor = Color3.new(0, 1, 1)
-					makegui(data)
-				end
-			end
-		end
+	if issystem then
+		return text
 	end
-
-
-	--Message sets.
-	local join = function(player)
-		local data = copy(SYSBASE)
-		data.Message = "User "..player.Name.." has joined the server."
-		data.Messagecolor = Color3.new(0,1,0)
-		makegui(data)
-	end
-	local leave = function(player,inchat)
-		local data = copy(SYSBASE)
-		data.Message = "User "..player.Name.." has left the server."
-		data.Messagecolor = Color3.new(1,0,0)
-		makegui(data)
-		if inchat == true then
-			data.Message = "User "..player.Name.." has left the chat and server."
-		end
-		makegui(data)
-	end
-	--Plr functionality
-
-
-	for i=1,#plrlist do
-		plrlist[i].Chatted:Connect(function(msg)
-			print(msg)
-			msgpost(msg,plrlist[i])
-		end)
-		local data = copy(SYSBASE)
-		data.Messagecolor = Color3.new(1, 1, 1)
-		makegui(data)
-	end
-	game.Players.PlayerAdded:Connect(function(player)
-		player.Chatted:Connect(function(msg)
-			print(msg)
-			msgpost(msg,player)
-		end)
-		join(player)
+	local succcess,filter = pcall(function()
+		return game:GetService("TextService"):FilterStringAsync(text,puid,1):GetChatForUserAsync(puid)
 	end)
-	game.Players.PlayerRemoving:Connect(function(plr)
-		leave(plr,(plr:FindFirstChild("BoardConsent") and (checkconsent(plr.UserId))))
+	if succcess then
+		return filter
+	else
+		return "Filter Failure.",true
+	end
+end
+
+for i=1,#plrlist do
+	plrlist[i]:SetAttribute("Chat",false)
+	playercount +=1
+	plrlist[i].Chatted:Connect(function(msg)
+		if string.lower(msg) == "+chat" then
+			plrlist[i]:SetAttribute("Chat",true)
+			local msg = "Player: "..plrlist[i].Name.." Has joined the chat."
+			local extra = {}
+			extra.ChatColor = {}
+			extra.ChatColor.Color = Color3.fromRGB(0, 255, 200)
+			postmsg(msg,"SYSTEM",extra,"Never")
+			return false
+		elseif string.lower(msg) == "-chat" then
+			plrlist[i]:SetAttribute("Chat",false)
+			local msg = "Player: "..plrlist[i].Name.." Has left the chat."
+			local extra = {}
+			extra.ChatColor = {}
+			extra.ChatColor.Color = Color3.fromRGB(200, 255, 0)
+			postmsg(msg,"SYSTEM",extra,"Never")
+			return false
+		else
+			if plrlist[i]:GetAttribute("Chat") == true then
+				if precheck(msg,plrlist[i].UserId) == false then
+				else
+					local Filtered = false
+					local msgfiltered = ""
+					msgfiltered,Filtered = filtertext(msg,plrlist[i].UserId,false)
+					local extra = {}
+					extra.Name = plrlist[i].Name
+					if plrlist[i].UserId == 21490931 then
+						extra.ChatColor = {}
+						extra.NameColor = {}
+						extra.ChatColor.Color = Color3.fromRGB(0,255,0)
+						extra.NameColor.Color = Color3.fromRGB(255,204,51)
+					elseif plrlist[i].UserId == 13480417 then
+						extra.ChatColor = {}
+						extra.NameColor = {}
+						extra.ChatColor.Color = Color3.fromRGB(255,215,0)
+						extra.NameColor.Color = ComputeNameColor(plrlist[i].Name)
+					else
+						extra.NameColor = {}
+						extra.NameColor.Color = ComputeNameColor(plrlist[i].Name)
+					end
+					postmsg(msgfiltered,"MSG",extra,Filtered)
+				end
+			end
+		end
 	end)
-	local data = copy(SYSBASE)
-	data.Message = "Board successfully setup."
-	data.Messagecolor = Color3.new(0,1,0)
-	data.Seperatorcolor = Color3.new(1,1,1)
+end
+game.Players.PlayerAdded:Connect(function(plr)
+	plr:SetAttribute("Chat",false)
+	plr.Chatted:Connect(function(msg)
+		if string.lower(msg) == "+chat" then
+			plr:SetAttribute("Chat",true)
+			local msg = "Player: "..plr.Name.." Has joined the chat."
+			local extra = {}
+			extra.ChatColor = {}
+			extra.ChatColor.Color = Color3.fromRGB(0, 255, 200)
+			postmsg(msg,"SYSTEM",extra,"Never")
+			return false
+		elseif string.lower(msg) == "-chat" then
+			plr:SetAttribute("Chat",false)
+			local msg = "Player: "..plr.Name.." Has left the chat."
+			local extra = {}
+			extra.ChatColor = {}
+			extra.ChatColor.Color = Color3.fromRGB(200, 255, 0)
+			postmsg(msg,"SYSTEM",extra,"Never")
+			return false
+		else
+			if plr:GetAttribute("Chat") == true then
+				if precheck(msg,plr.UserId) == false then
+				else
+					local Filtered = false
+					local msgfiltered = ""
+					msgfiltered,Filtered = filtertext(msg,plr.UserId,false)
+					local extra = {}
+					extra.Name = plr.Name
+					if plr.UserId == 21490931 then
+						extra.ChatColor = {}
+						extra.NameColor = {}
+						extra.ChatColor.Color = Color3.fromRGB(0,255,0)
+						extra.NameColor.Color = Color3.fromRGB(255,204,51)
+					elseif plr.UserId == 13480417 then
+						extra.ChatColor = {}
+						extra.NameColor = {}
+						extra.ChatColor.Color = Color3.fromRGB(255,215,0)
+						extra.NameColor.Color = ComputeNameColor(plr.Name)
+					else
+						extra.NameColor = {}
+						extra.NameColor.Color = ComputeNameColor(plr.Name)
+					end
+					postmsg(msgfiltered,"MSG",extra,Filtered)
+				end
+			end
+		end
+	end)
+end)
+game.Players.PlayerRemoving:Connect(function(plr)
+	playercount -=1
+	local f = script.SYSTEM:Clone()
+	f.Message.Text = plr.Name.." Has left the server.  (Player count is at "..playercount.."/15)"
+	f.Message.TextColor3 = Color3.fromRGB(170, 0, 0)
+	if plr:GetAttribute("Chat") == true then
+		f.Message.Text = plr.Name.." Has left the server and chat.  (Player count is at "..playercount.."/15)"
+		f.Message.TextColor3 = Color3.fromRGB(255, 85, 0)
+	end
+	f.Parent = board
+	wait(55)
+	local Tween = game:GetService("TweenService"):Create(f, TweenInfo.new(5), {Transparency = 0})
+	Tween:Play()
+	wait(5)
+	f:Destroy()
+end)
+game.Players.PlayerAdded:Connect(function(plr)
+	playercount +=1
+	local f = script.SYSTEM:Clone()
+	f.Message.Text = plr.Name.." Has joined the server.  (Player count is at "..playercount.."/15)"
+	f.Message.TextColor3 = Color3.fromRGB(85, 255, 0)
+	f.Parent = board
+	wait(55)
+	local Tween = game:GetService("TweenService"):Create(f, TweenInfo.new(5), {Transparency = 0})
+	Tween:Play()
+	wait(5)
+	f:Destroy()
+end)
 end
